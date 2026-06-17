@@ -7,8 +7,7 @@ dist/
 build/
 .venv/
 
-# uv
-.python-version
+# uv (lockfile is tracked, .python-version is tracked)
 
 # Config with secrets
 config.yaml
