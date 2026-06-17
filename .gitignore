@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+
+# uv
+.python-version
+
+# Config with secrets
+config.yaml
+
+# Downloaded models (large binaries)
+models/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Tool configs
+.claude/
+.spec-workflow/
+.serena/
