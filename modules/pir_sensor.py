@@ -10,11 +10,11 @@ radiation (body heat). When a human walks into its field of view (~3-7 meters, 1
 sensor outputs HIGH on its signal pin.
 
 This module:
-    1. Monitors the GPIO pin connected to the PIR sensor
-    2. Emits 'human_detected' events via the event bus when motion is detected
-    3. Emits 'human_left' events when motion stops
-    4. Enforces a cooldown period to prevent rapid repeated triggers
-    5. Handles sensor disconnect gracefully
+1. Monitors the GPIO pin connected to the PIR sensor
+2. Emits 'human_detected' events via the event bus when motion is detected
+3. Emits 'human_left' events when motion stops
+4. Enforces a cooldown period to prevent rapid repeated triggers
+5. Handles sensor disconnect gracefully
 
 Hardware wiring:
     HC-SR501 VCC  → Pi 5V

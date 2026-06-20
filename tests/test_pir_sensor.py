@@ -23,14 +23,15 @@ import time
 from unittest.mock import MagicMock, patch
 
 from gpiozero import Device
-from gpiozero.pins.mock import MockFactory
+from gpiozero.pins.mock import MockFactory, MockPWMPin
 
 from core.event_bus import EventBus
 from modules.pir_sensor import PIRSensor
 
 # ----------------------------------------------------------------------------------------------------
 # Tell gpiozero to use mock pins instead of real GPIO hardware.
-Device.pin_factory = MockFactory()
+# MockPWMPin supports both digital and PWM operations (needed when tests run together).
+Device.pin_factory = MockFactory(pin_class=MockPWMPin)
 
 
 # ----------------------------------------------------------------------------------------------------
