@@ -1,14 +1,24 @@
-"""nap-of-the-rpi: Raspberry Pi 4 human detection, laser trigger, and weather TTS system."""
+# ----------------------------------------------------------------------------------------------------
+# main.py
+# ----------------------------------------------------------------------------------------------------
 
+"""
+nap-of-the-rpi: Raspberry Pi 4 human detection, laser trigger, and weather TTS system.
+"""
+
+# ----------------------------------------------------------------------------------------------------
 import signal
 import sys
 
 from core.config import Config
 from core.event_bus import EventBus
 
-
+# ----------------------------------------------------------------------------------------------------
 def main():
-    """Entry point: load config, create event bus, wire modules, and run."""
+    """
+    Entry point: load config, create event bus, wire modules, and run.
+    """
+
     config = Config.load("config.yaml")
     event_bus = EventBus()
 

@@ -20,10 +20,11 @@ Usage:
 
 # ----------------------------------------------------------------------------------------------------
 from __future__ import annotations
+from pathlib import Path
 
+# ----------------------------------------------------------------------------------------------------
 import os
 import re
-from pathlib import Path
 
 # We import yaml at the top — it's listed in our pyproject.toml dependencies
 import yaml
@@ -173,7 +174,7 @@ class Config:
 # Private helper functions (not part of the public API, just internal utilities)
 # ----------------------------------------------------------------------------------------------------
 
-
+# ----------------------------------------------------------------------------------------------------
 def _deep_copy(data: dict) -> dict:
     """
     Create a deep copy of a nested dictionary.
@@ -189,7 +190,7 @@ def _deep_copy(data: dict) -> dict:
             result[key] = value
     return result
 
-
+# ----------------------------------------------------------------------------------------------------
 def _deep_merge(base: dict, override: dict) -> None:
     """
     Recursively merge 'override' into 'base' (modifies base in-place).
@@ -211,7 +212,7 @@ def _deep_merge(base: dict, override: dict) -> None:
             # Override the value
             base[key] = value
 
-
+# ----------------------------------------------------------------------------------------------------
 def _substitute_env_vars(data: dict) -> None:
     """
     Replace ${ENV_VAR} patterns in string values with actual environment variable values.
