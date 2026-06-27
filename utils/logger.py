@@ -23,10 +23,13 @@ Rotating log files:
 """
 
 # ----------------------------------------------------------------------------------------------------
-import logging
-import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
+# ----------------------------------------------------------------------------------------------------
+import logging
+import sys
+
 
 # ----------------------------------------------------------------------------------------------------
 # Module-level flag to track if logging has been configured.
