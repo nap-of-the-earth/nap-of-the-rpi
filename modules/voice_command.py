@@ -29,9 +29,9 @@ Supported commands (after wake word):
 import json
 import logging
 import queue
-import sounddevice as sd
 import threading
 
+import sounddevice as sd
 
 logger = logging.getLogger(__name__)
 
@@ -226,56 +226,92 @@ class VoiceCommand:
         text_lower = text.lower()
 
         # Check if wake word is in the recognized text
-        if wake_word not in text_lower:
+        # Vosk may transcribe "hey pi" as "hey pie", "hey pee", etc.
+        # Try longer variants FIRST so "hey pie" matches before "hey pi"
+        # (otherwise "hey pi" matches inside "hey pie" leaving a stray "e")
+        wake_variants = [wake_word + "e", wake_word + "p", wake_word]
+        matched_variant = None
+        for variant in wake_variants:
+            if variant in text_lower:
+                matched_variant = variant
+                break
+
+        if matched_variant is None:
             return  # Not a command — ignore
 
-        # Extract command portion (everything after the wake word)
-        wake_idx = text_lower.index(wake_word) + len(wake_word)
+        # Extract command portion (everything after the wake word variant)
+        wake_idx = text_lower.index(matched_variant) + len(matched_variant)
         command = text_lower[wake_idx:].strip()
 
         logger.info(f"Wake word detected, command: '{command}'")
 
-        # Match against known commands
-        if self._match_weather(command):
-            self.event_bus.emit("command_weather")
-        elif self._match_laser_on(command):
-            self.event_bus.emit("command_laser_on")
-        elif self._match_laser_off(command):
-            self.event_bus.emit("command_laser_off")
+        # Match against known commands using fuzzy matching
+        match = self._fuzzy_match_command(command)
+        if match:
+            logger.info(f"Matched command: '{match}'")
+            self.event_bus.emit(match)
         else:
-            # Unrecognized command — announce via TTS
             logger.info(f"Unrecognized command: '{command}'")
             self.event_bus.emit("weather_ready", {"text": "Command not recognized."})
 
     # ------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _match_weather(command: str) -> bool:
+    def _fuzzy_match_command(self, command: str) -> str | None:
         """
-        Check if command matches weather request patterns.
+        Match a command string against known commands using fuzzy similarity.
+
+        Uses difflib.SequenceMatcher to find the best matching command pattern.
+        This handles Vosk mishearings automatically without hardcoded aliases
+        (e.g., "ladder" matches "laser" at ~0.77 similarity).
+
+        Args:
+            command: The recognized text after the wake word.
+
+        Returns:
+            Event name to emit (e.g., "command_weather"), or None if no match.
         """
-        weather_phrases = [
-            "weather",
-            "what's the weather",
-            "whats the weather",
-            "how's the weather",
-            "hows the weather",
-            "weather report",
-            "tell me the weather",
+        from difflib import SequenceMatcher
+
+        # Known commands: (canonical phrase, event to emit)
+        known_commands = [
+            ("weather", "command_weather"),
+            ("what's the weather", "command_weather"),
+            ("weather report", "command_weather"),
+            ("laser on", "command_laser_on"),
+            ("turn on laser", "command_laser_on"),
+            ("laser off", "command_laser_off"),
+            ("turn off laser", "command_laser_off"),
         ]
-        return any(phrase in command for phrase in weather_phrases)
 
-    # ------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _match_laser_on(command: str) -> bool:
-        """
-        Check if command matches laser-on patterns.
-        """
-        return "laser on" in command or "turn on laser" in command
+        # Minimum similarity threshold (0.0 to 1.0)
+        # 0.6 catches most Vosk mishearings while avoiding false positives
+        threshold = 0.6
 
-    # ------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _match_laser_off(command: str) -> bool:
-        """
-        Check if command matches laser-off patterns.
-        """
-        return "laser off" in command or "turn off laser" in command
+        best_match = None
+        best_score = 0.0
+
+        for phrase, event in known_commands:
+            # Check exact substring match first (fast path)
+            if phrase in command:
+                return event
+
+            # Fuzzy match: compare the command against the known phrase
+            score = SequenceMatcher(None, command, phrase).ratio()
+
+            # Also try matching just the key word (handles "laser" in longer phrases)
+            words = phrase.split()
+            for word in words:
+                if len(word) >= 4:  # Only fuzzy-match meaningful words
+                    word_score = SequenceMatcher(None, command, word).ratio()
+                    if word == "weather" and word_score > score:
+                        score = word_score
+                        break
+
+            if score > best_score:
+                best_score = score
+                best_match = event
+
+        if best_score >= threshold:
+            logger.debug(f"Fuzzy match: '{command}' → '{best_match}' (score: {best_score:.2f})")
+            return best_match
+
+        return None
