@@ -227,8 +227,9 @@ class VoiceCommand:
 
         # Check if wake word is in the recognized text
         # Vosk may transcribe "hey pi" as "hey pie", "hey pee", etc.
-        # Try common Vosk transcriptions of the wake word
-        wake_variants = [wake_word, wake_word + "e", wake_word + "p"]
+        # Try longer variants FIRST so "hey pie" matches before "hey pi"
+        # (otherwise "hey pi" matches inside "hey pie" leaving a stray "e")
+        wake_variants = [wake_word + "e", wake_word + "p", wake_word]
         matched_variant = None
         for variant in wake_variants:
             if variant in text_lower:
@@ -278,7 +279,7 @@ class VoiceCommand:
     @staticmethod
     def _match_laser_on(command: str) -> bool:
         """Check if command matches laser-on patterns."""
-        phrases = ["laser on", "turn on laser", "ladder on", "turn on ladder"]
+        phrases = ["laser on", "laser own", "turn on laser", "ladder on", "ladder own", "turn on ladder"]
         return any(phrase in command for phrase in phrases)
 
     # ------------------------------------------------------------------------------------------------
